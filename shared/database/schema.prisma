@@ -1,0 +1,31 @@
+// Prisma Schema for Flash Sale System
+// Location: shared/database/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Or "mongodb" based on your preference
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  userId        String
+  productId     String
+  quantity      Int
+  totalAmount   Decimal
+  status        OrderStatus @default(PENDING)
+  paymentLink   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  expiresAt     DateTime    // Used by Expiry Server for TTL logic
+}
