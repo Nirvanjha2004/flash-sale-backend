@@ -6,5 +6,8 @@
   "dependencies": {
     "kafkajs": "^2.2.4",
     "nodemailer": "^6.9.0"
+  },
+  "scripts": {
+    "start": "node src/consumers/emailConsumer.js"
   }
 }

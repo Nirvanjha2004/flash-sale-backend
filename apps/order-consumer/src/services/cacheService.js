@@ -2,7 +2,7 @@ import Redis from 'ioredis';
 
 // Note: Use a connection pool or share this client across the consumer
 const redisCache = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
+  host: process.env.REDIS_HOST || 'redis',
   port: process.env.REDIS_PORT || 6379,
 });
 

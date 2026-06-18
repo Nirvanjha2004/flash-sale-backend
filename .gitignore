@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Monorepo specific (Optional, usually handled by root node_modules)
+apps/*/node_modules/
+shared/node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Env variables
+.env
+.env.test
+.env.production
+.env.local
+
+# Build artifacts (if any later)
+dist/
+build/
+coverage/
+
+# OS/Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Prisma
+# Ignore generated client if you are generating into a custom path, 
+# but usually it goes to node_modules which is already ignored.
+# prisma/sqlite.db (If you were using SQLite)

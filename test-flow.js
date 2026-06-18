@@ -1,8 +1,11 @@
 import axios from 'axios';
+import Redis from 'ioredis';
+import { PrismaClient } from '@prisma/client';
 
 const BASE_URL = 'http://localhost:3000/api/orders';
 const USER_ID = 'user-123';
 const PRODUCT_ID = 'prod-abc';
+const prisma = new PrismaClient();
 
 async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -11,9 +14,28 @@ async function sleep(ms) {
 async function runTest() {
     console.log('--- Starting Flash Sale E2E Test ---');
 
+    // 0. Seed Redis Inventory and Database User
+    console.log('Seeding initial inventory and user...');
+    
+    // Seed User
+    await prisma.user.upsert({
+        where: { id: USER_ID },
+        update: {},
+        create: {
+            id: USER_ID,
+            email: 'test@example.com',
+            name: 'Test User'
+        }
+    });
+
+    // Seed Redis
+    const redis = new Redis({ host: 'localhost', port: 6379 });
+    await redis.set(`product:${PRODUCT_ID}:stock`, 100);
+    console.log(`User seeded and stock for ${PRODUCT_ID} seeded to 100.`);
+
     // 1. Create Order
     console.log('Initiating order...');
-    const orderRes = await axios.post(`${BASE_URL}/`, 
+    const orderRes = await axios.post(`${BASE_URL}`, 
         { productId: PRODUCT_ID, quantity: 1 },
         { headers: { Authorization: `Bearer ${USER_ID}` } }
     );
@@ -28,6 +50,7 @@ async function runTest() {
             const statusRes = await axios.get(`${BASE_URL}/status/${orderId}`, 
                 { headers: { Authorization: `Bearer ${USER_ID}` } }
             );
+            console.log("The statusRes is : ", statusRes)
             if (statusRes.data.paymentLink) {
                 paymentLink = statusRes.data.paymentLink;
                 console.log(`Payment link received from ${statusRes.data.source}: ${paymentLink}`);
@@ -57,6 +80,7 @@ async function runTest() {
     }
     
     console.log('--- Test Finished ---');
+    redis.quit();
 }
 
 runTest().catch(console.error);

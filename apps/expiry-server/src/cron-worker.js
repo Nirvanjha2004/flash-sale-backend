@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import redisClient from './redisClient'; // Assuming this exists
-import { revertStock } from '../../../../shared/utils/expiry';
+import redisClient from './redisClient.js';
+import { revertStock } from '../../../../shared/utils/expiry.js';
 
 const prisma = new PrismaClient();
 
