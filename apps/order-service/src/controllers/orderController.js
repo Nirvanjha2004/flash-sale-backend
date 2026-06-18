@@ -3,7 +3,8 @@ import { sendOrderEvent } from '../services/kafkaProducer.js';
 import redisClient from '../config/redisClient.js';
 
 export async function createOrder(req, res) {
-  const { productId, quantity, userId } = req.body;
+  const { productId, quantity } = req.body;
+  const userId = req.user.id; // From auth middleware
   const stockKey = `product:${productId}:stock`;
 
   try {

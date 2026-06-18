@@ -1,0 +1,10 @@
+{
+  "name": "expiry-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/cron-worker.js",
+  "dependencies": {
+    "ioredis": "^5.3.2",
+    "@prisma/client": "^5.0.0"
+  }
+}

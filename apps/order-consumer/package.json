@@ -1,0 +1,10 @@
+{
+  "name": "order-consumer",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/consumers/orderConsumer.js",
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "@prisma/client": "^5.0.0"
+  }
+}
