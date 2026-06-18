@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { requestPaymentLink } from '../services/paymentService.js';
+import { cachePaymentLink } from '../services/cacheService.js';
 import { createConsumer } from '../../../../shared/utils/kafka.js';
 
 const prisma = new PrismaClient();
@@ -37,7 +38,10 @@ async function run() {
           data: { paymentLink },
         });
 
-        console.log(`[Order Consumer] Order ${order.id} persisted and payment link generated.`);
+        // 4. Cache Payment Link in Redis
+        await cachePaymentLink(order.id, paymentLink);
+
+        console.log(`[Order Consumer] Order ${order.id} persisted, link cached.`);
         
         // TODO: Push to 'order-status-updates' Kafka topic for Notification Service
       } catch (error) {
