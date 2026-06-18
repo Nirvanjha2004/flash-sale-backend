@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Redis from 'ioredis';
 import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
 const BASE_URL = 'http://localhost:3000/api/orders';
 const USER_ID = 'user-123';
@@ -35,12 +36,26 @@ async function runTest() {
 
     // 1. Create Order
     console.log('Initiating order...');
+    const idempotencyKey = crypto.randomUUID();
+    const headers = { 
+        Authorization: `Bearer ${USER_ID}`,
+        'Idempotency-Key': idempotencyKey
+    };
+
     const orderRes = await axios.post(`${BASE_URL}`, 
         { productId: PRODUCT_ID, quantity: 1 },
-        { headers: { Authorization: `Bearer ${USER_ID}` } }
+        { headers }
     );
     const { orderId } = orderRes.data;
     console.log(`Order created: ${orderId}`);
+
+    // 1.5 Test Idempotency
+    console.log('Testing idempotency (sending exact same request)...');
+    const retryRes = await axios.post(`${BASE_URL}`, 
+        { productId: PRODUCT_ID, quantity: 1 },
+        { headers }
+    );
+    console.log(`Retry response order ID: ${retryRes.data.orderId} (Matches: ${retryRes.data.orderId === orderId})`);
 
     // 2. Poll for payment link
     console.log('Polling for payment link...');
@@ -50,7 +65,6 @@ async function runTest() {
             const statusRes = await axios.get(`${BASE_URL}/status/${orderId}`, 
                 { headers: { Authorization: `Bearer ${USER_ID}` } }
             );
-            console.log("The statusRes is : ", statusRes)
             if (statusRes.data.paymentLink) {
                 paymentLink = statusRes.data.paymentLink;
                 console.log(`Payment link received from ${statusRes.data.source}: ${paymentLink}`);

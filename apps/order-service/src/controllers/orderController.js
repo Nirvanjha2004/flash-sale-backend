@@ -12,9 +12,23 @@ const prisma = new PrismaClient();
 export async function createOrder(req, res) {
   const { productId, quantity } = req.body;
   const userId = req.user.id; // From auth middleware
+  const idempotencyKey = req.headers['idempotency-key'];
   const stockKey = `product:${productId}:stock`;
 
+  if (!idempotencyKey) {
+    return res.status(400).json({ error: 'Idempotency-Key header is required' });
+  }
+
+  const redisIdempKey = `idemp:${userId}:${idempotencyKey}`;
+
   try {
+    // 0. Check Idempotency Cache
+    const cachedResponse = await redisClient.get(redisIdempKey);
+    if (cachedResponse) {
+      console.log(`[Idempotency] Cache hit for key: ${idempotencyKey}`);
+      return res.status(202).json(JSON.parse(cachedResponse));
+    }
+
     // 1. Atomic Stock Check & Decrement
     const remainingStock = await decrementStock(redisClient, stockKey, quantity);
     
@@ -29,11 +43,16 @@ export async function createOrder(req, res) {
     
     await sendOrderEvent(orderData);
 
-    res.status(202).json({
+    const responsePayload = {
         message: 'Order accepted',
         orderId: orderData.id,
         remainingStock
-    });
+    };
+
+    // 3. Cache Idempotency Response (TTL: 24h)
+    await redisClient.set(redisIdempKey, JSON.stringify(responsePayload), 'EX', 86400);
+
+    res.status(202).json(responsePayload);
 
   } catch (err) {
     if (err.message === 'INSUFFICIENT_STOCK' || err.message === 'PRODUCT_NOT_FOUND') {
