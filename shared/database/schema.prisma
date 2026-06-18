@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // Or "mongodb" based on your preference
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -17,9 +17,17 @@ enum OrderStatus {
   FAILED
 }
 
+model User {
+  id        String  @id @default(uuid())
+  email     String  @unique
+  name      String?
+  orders    Order[]
+}
+
 model Order {
   id            String      @id @default(uuid())
   userId        String
+  user          User        @relation(fields: [userId], references: [id])
   productId     String
   quantity      Int
   totalAmount   Decimal
